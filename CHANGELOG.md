@@ -1,3 +1,8 @@
+## 0.3.0
+
+- Updated dependencies (package_info_plus: ^9.0.0, pub_semver: ^2.2.0)
+- Recreated example/android project which was no longer compiling
+
 ## 0.2.1
 
 - **BREAKING**: Remove `fetchCurrentPatchVersion` callback (it was not properly implemented)

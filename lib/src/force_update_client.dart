@@ -1,7 +1,6 @@
 import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pub_semver/pub_semver.dart';
 
@@ -35,7 +34,8 @@ class ForceUpdateClient {
     // * On Android, the current version may appear as `^X.Y.Z(.*)`
     // * But semver can only parse this if it's formatted as `^X.Y.Z-(.*)`
     // * and we only care about X.Y.Z, so we can remove the flavor
-    final currentVersionStr = RegExp(r'\d+\.\d+\.\d+').matchAsPrefix(packageInfo.version)!.group(0)!;
+    final currentVersionStr =
+        RegExp(r'\d+\.\d+\.\d+').matchAsPrefix(packageInfo.version)!.group(0)!;
 
     // * Parse versions in semver format
     final requiredVersion = Version.parse(requiredVersionStr);

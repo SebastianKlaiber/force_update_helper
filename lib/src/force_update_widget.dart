@@ -15,16 +15,21 @@ class ForceUpdateWidget extends StatefulWidget {
     required this.showStoreListing,
     this.onException,
   }) : assert(
-          (child != null && builder == null) || (child == null && builder != null),
-          'Either child or builder must be provided, but not both.',
-        );
+         (child != null && builder == null) ||
+             (child == null && builder != null),
+         'Either child or builder must be provided, but not both.',
+       );
   final Widget? child;
-  final Widget Function(BuildContext context, bool forceUpdateRequired)? builder;
+  final Widget Function(
+    BuildContext context,
+    bool forceUpdateRequired,
+    VoidCallback? navigateToStore,
+  )? builder;
   final GlobalKey<NavigatorState> navigatorKey;
   final ForceUpdateClient forceUpdateClient;
   final bool allowCancel;
   final Future<bool?> Function(BuildContext context, bool allowCancel)
-      showForceUpdateAlert;
+  showForceUpdateAlert;
   final Future<void> Function(Uri storeUrl) showStoreListing;
   final void Function(Object error, StackTrace? stackTrace)? onException;
 
@@ -36,6 +41,7 @@ class _ForceUpdateWidgetState extends State<ForceUpdateWidget>
     with WidgetsBindingObserver {
   var _isAlertVisible = false;
   var _forceUpdateRequired = false;
+  Uri? _storeUrl;
 
   @override
   void initState() {
@@ -69,12 +75,14 @@ class _ForceUpdateWidgetState extends State<ForceUpdateWidget>
       final updateRequired =
           await widget.forceUpdateClient.isAppUpdateRequired();
       if (updateRequired) {
+        final parsedStoreUrl = Uri.parse(storeUrl);
         if (widget.builder != null && !_forceUpdateRequired) {
           setState(() {
             _forceUpdateRequired = true;
+            _storeUrl = parsedStoreUrl;
           });
         }
-        return await _triggerForceUpdate(Uri.parse(storeUrl));
+        return await _triggerForceUpdate(parsedStoreUrl);
       }
     } catch (e, st) {
       final handler = widget.onException;
@@ -104,10 +112,21 @@ class _ForceUpdateWidgetState extends State<ForceUpdateWidget>
     }
   }
 
+  void _navigateToStore() {
+    final storeUrl = _storeUrl;
+    if (storeUrl != null) {
+      widget.showStoreListing(storeUrl);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.builder != null) {
-      return widget.builder!(context, _forceUpdateRequired);
+      return widget.builder!(
+        context,
+        _forceUpdateRequired,
+        _forceUpdateRequired ? _navigateToStore : null,
+      );
     }
     return widget.child!;
   }

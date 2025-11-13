@@ -43,9 +43,10 @@ class ForceUpdateClient {
 
     final updateRequired = currentVersion < requiredVersion;
     log(
-        'Update ${updateRequired ? '' : 'not '}required. '
-        'Current version: $currentVersion, required version: $requiredVersion',
-        name: _name);
+      'Update ${updateRequired ? '' : 'not '}required. '
+      'Current version: $currentVersion, required version: $requiredVersion',
+      name: _name,
+    );
     return updateRequired;
   }
 
@@ -64,8 +65,10 @@ class ForceUpdateClient {
       // * On Android, use the package name from PackageInfo
       return 'https://play.google.com/store/apps/details?id=${packageInfo.packageName}';
     } else {
-      log('No store URL for platform: ${defaultTargetPlatform.name}',
-          name: _name);
+      log(
+        'No store URL for platform: ${defaultTargetPlatform.name}',
+        name: _name,
+      );
       return null;
     }
   }

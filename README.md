@@ -26,7 +26,13 @@ dependencies:
   force_update_helper:
 ```
 
-Use it by adding a `ForceUpdateWidget` to your `MaterialApp`'s builder property:
+Use it by adding a `ForceUpdateWidget` to your `MaterialApp`'s builder property.
+
+You can use it in two ways:
+
+### 1. With a child widget (simple approach)
+
+This is the simplest approach where you pass the child widget directly:
 
 ```dart
 void main() {
@@ -88,6 +94,82 @@ class MainApp extends StatelessWidget {
   }
 }
 ```
+
+### 2. With a builder function (advanced approach)
+
+If you want to prevent your app from making API calls or initializing when a force update is required, you can use the builder approach. The builder receives a boolean indicating whether a force update is required:
+
+```dart
+void main() {
+  runApp(const MainApp());
+}
+
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
+class MainApp extends StatelessWidget {
+  const MainApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      navigatorKey: _rootNavigatorKey,
+      builder: (context, child) {
+        return ForceUpdateWidget(
+          navigatorKey: _rootNavigatorKey,
+          forceUpdateClient: ForceUpdateClient(
+            fetchRequiredVersion: () => Future.value('2.0.0'),
+            iosAppStoreId: '6482293361',
+          ),
+          allowCancel: false,
+          showForceUpdateAlert: (context, allowCancel) => showAlertDialog(
+            context: context,
+            title: 'App Update Required',
+            content: 'Please update to continue using the app.',
+            cancelActionText: allowCancel ? 'Later' : null,
+            defaultActionText: 'Update Now',
+          ),
+          showStoreListing: (storeUrl) async {
+            if (await canLaunchUrl(storeUrl)) {
+              await launchUrl(
+                storeUrl,
+                mode: LaunchMode.externalApplication,
+              );
+            } else {
+              log('Cannot launch URL: $storeUrl');
+            }
+          },
+          onException: (e, st) {
+            log(e.toString());
+          },
+          builder: (context, forceUpdateRequired) {
+            // Show a simple loading/update screen if update is required
+            // This prevents the full app from initializing
+            if (forceUpdateRequired) {
+              return const Scaffold(
+                body: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
+            // Otherwise, return the actual app
+            return child!;
+          },
+        );
+      },
+      home: const Scaffold(
+        body: Center(
+          child: Text('Hello World!'),
+        ),
+      ),
+    );
+  }
+}
+```
+
+**Note:** You must provide either `child` or `builder`, but not both. The builder approach is particularly useful when:
+- Your app makes expensive API calls on startup
+- You want to show a custom UI while the update check is in progress
+- You want to prevent the app from initializing until the update check is complete
 
 Note that in order to show the update dialog, a root navigator key needs to be added to `MaterialApp` (this is the same technique used by the [upgrader](https://pub.dev/packages/upgrader) package).
 

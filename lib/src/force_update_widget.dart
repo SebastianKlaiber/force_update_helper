@@ -74,15 +74,18 @@ class _ForceUpdateWidgetState extends State<ForceUpdateWidget>
       }
       final updateRequired =
           await widget.forceUpdateClient.isAppUpdateRequired();
+      if (!mounted) {
+        return;
+      }
+      if (widget.builder != null &&
+          _forceUpdateRequired != updateRequired) {
+        setState(() {
+          _forceUpdateRequired = updateRequired;
+          _storeUrl = updateRequired ? Uri.parse(storeUrl) : null;
+        });
+      }
       if (updateRequired) {
-        final parsedStoreUrl = Uri.parse(storeUrl);
-        if (widget.builder != null && !_forceUpdateRequired) {
-          setState(() {
-            _forceUpdateRequired = true;
-            _storeUrl = parsedStoreUrl;
-          });
-        }
-        return await _triggerForceUpdate(parsedStoreUrl);
+        return await _triggerForceUpdate(Uri.parse(storeUrl));
       }
     } catch (e, st) {
       final handler = widget.onException;

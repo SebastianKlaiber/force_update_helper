@@ -6,20 +6,30 @@ import 'force_update_client.dart';
 class ForceUpdateWidget extends StatefulWidget {
   const ForceUpdateWidget({
     super.key,
-    required this.child,
+    this.child,
+    this.builder,
     required this.navigatorKey,
     required this.forceUpdateClient,
     required this.allowCancel,
     required this.showForceUpdateAlert,
     required this.showStoreListing,
     this.onException,
-  });
-  final Widget child;
+  }) : assert(
+         (child != null && builder == null) ||
+             (child == null && builder != null),
+         'Either child or builder must be provided, but not both.',
+       );
+  final Widget? child;
+  final Widget Function(
+    BuildContext context,
+    bool forceUpdateRequired,
+    VoidCallback? navigateToStore,
+  )? builder;
   final GlobalKey<NavigatorState> navigatorKey;
   final ForceUpdateClient forceUpdateClient;
   final bool allowCancel;
   final Future<bool?> Function(BuildContext context, bool allowCancel)
-      showForceUpdateAlert;
+  showForceUpdateAlert;
   final Future<void> Function(Uri storeUrl) showStoreListing;
   final void Function(Object error, StackTrace? stackTrace)? onException;
 
@@ -30,6 +40,8 @@ class ForceUpdateWidget extends StatefulWidget {
 class _ForceUpdateWidgetState extends State<ForceUpdateWidget>
     with WidgetsBindingObserver {
   var _isAlertVisible = false;
+  var _forceUpdateRequired = false;
+  Uri? _storeUrl;
 
   @override
   void initState() {
@@ -62,6 +74,16 @@ class _ForceUpdateWidgetState extends State<ForceUpdateWidget>
       }
       final updateRequired =
           await widget.forceUpdateClient.isAppUpdateRequired();
+      if (!mounted) {
+        return;
+      }
+      if (widget.builder != null &&
+          _forceUpdateRequired != updateRequired) {
+        setState(() {
+          _forceUpdateRequired = updateRequired;
+          _storeUrl = updateRequired ? Uri.parse(storeUrl) : null;
+        });
+      }
       if (updateRequired) {
         return await _triggerForceUpdate(Uri.parse(storeUrl));
       }
@@ -93,9 +115,23 @@ class _ForceUpdateWidgetState extends State<ForceUpdateWidget>
     }
   }
 
+  void _navigateToStore() {
+    final storeUrl = _storeUrl;
+    if (storeUrl != null) {
+      widget.showStoreListing(storeUrl);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return widget.child;
+    if (widget.builder != null) {
+      return widget.builder!(
+        context,
+        _forceUpdateRequired,
+        _forceUpdateRequired ? _navigateToStore : null,
+      );
+    }
+    return widget.child!;
   }
 }
 

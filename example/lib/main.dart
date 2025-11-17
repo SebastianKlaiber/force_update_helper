@@ -58,7 +58,59 @@ class MainApp extends StatelessWidget {
           onException: (e, st) {
             log(e.toString());
           },
-          child: child!,
+          builder: (context, forceUpdateRequired, navigateToStore) {
+            // * You can conditionally render UI based on forceUpdateRequired
+            if (forceUpdateRequired) {
+              // Show a blurred/disabled UI when update is required
+              return Material(
+                child: ColoredBox(
+                  color: Colors.black.withOpacity(0.5),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.system_update,
+                          size: 64,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Update Required',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Please update the app to continue',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white70,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton.icon(
+                          onPressed: navigateToStore,
+                          icon: const Icon(Icons.open_in_new),
+                          label: const Text('Open Store'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 16,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+            return child!;
+          },
         );
       },
       home: const Scaffold(

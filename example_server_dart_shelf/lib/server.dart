@@ -23,8 +23,9 @@ Response requiredVersion(Request request) {
 }
 
 void main() async {
-  final handler =
-      const Pipeline().addMiddleware(logRequests()).addHandler(handleRequest);
+  final handler = const Pipeline()
+      .addMiddleware(logRequests())
+      .addHandler(handleRequest);
 
   final server = await io.serve(
     handler,
